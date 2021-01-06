@@ -26,7 +26,7 @@ exports.signup=(req,res)=>{
                          
                     }
                     
-                        database.query("INSERT INTO users(nom,prenom,email,password,photoUrl) VALUES('"+req.body.nom+"','"+req.body.prenom+"','"+req.body.email+"','"+req.body.password+"','"+img+"')")
+                        database.query("INSERT INTO users(nom,prenom,email,password,photoUrl,role) VALUES('"+req.body.nom+"','"+req.body.prenom+"','"+req.body.email+"','"+req.body.password+"','"+img+"','"+req.body.role+"')")
                         .then((value)=>{
                             res.status(201).json({
                                 message:" votre compte a bien été crée"       

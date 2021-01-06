@@ -44,13 +44,18 @@ app.use(cors({
   origin: 'http://localhost:4200',
   methods: ['GET', 'PUT', 'DELETE', 'PATCH', 'POST']
 }));
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 //routes
 const authRoutes=require('./src/routes/auth');
 const hopitalRoutes=require('./src/routes/hopital');
+const servicesRoutes=require('./src/routes/service');
+const medecinsRoutes=require('./src/routes/medecin');
 
 app.use('/api',authRoutes);
 app.use('/api',hopitalRoutes);
+app.use('/api',servicesRoutes);
+app.use('/api',medecinsRoutes);
 
 
 

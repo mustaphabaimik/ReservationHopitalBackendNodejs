@@ -3,7 +3,8 @@ const {database}=require("../../config/db");
 
 exports.getall=(req, res)=> {
     database.table('hopitaux as h')
-        .withFields(['h.nom',
+        .withFields(['h.ObjectId',
+            'h.nom',
             'h.province',
             'h.region'
         ])
@@ -212,8 +213,8 @@ exports.getProvinces=(req, res)=> {
         .getAll()
         .then(data => {
             if (data.length > 0) {
-                const province =  removeduplicateprovince(data);
-                res.status(200).json({ province });          
+                const provinces =  removeduplicateprovince(data);
+                res.status(200).json({ provinces });          
             } else {
                 res.status(404).json({
                     message:"Aucune province trouvé"
