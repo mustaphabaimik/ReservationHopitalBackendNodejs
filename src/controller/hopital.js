@@ -23,6 +23,30 @@ exports.getall=(req, res)=> {
         .catch(err => console.log(err));
 }
 
+exports.getOne=(req, res)=> {
+   
+    
+
+    database.table('hopitaux as h')
+        .withFields(['h.ObjectId',
+        'h.nom',
+        'h.x',
+        'h.y'
+        ])
+        .filter({'h.ObjectId': req.params.idHop})
+        .get()
+        .then(hopital => {
+           
+            if (hopital) {
+                res.status(200).json(hopital);
+            } else {
+                res.json({message: `Désolé, aucun résultat ne correspond à votre recherche.`});
+            }
+        }).catch(err => res.json(err));
+}
+
+
+
 exports.getHopByProvince=(req, res)=> {
 
    
@@ -181,10 +205,6 @@ exports.getByProvName=(req, res)=> {
     .catch(err => console.log(err));
 }
 
-
-
-
-
 exports.getRegions=(req, res)=> {
     database.table('hopitaux as h')
         .withFields([
@@ -224,6 +244,50 @@ exports.getProvinces=(req, res)=> {
         .catch(err => console.log(err));
 }
 
+exports.statisReservHop=(req, res)=> {
+    // ${req.params.nom}
+
+    database.query("select h.nom as 'hopital',count(r.hopital) as 'nbr' from rdv r inner join hopitaux h on h.ObjectId=r.hopital group by h.nom")
+    .then((data)=>{
+        if (data.length > 0) {
+            res.status(200).json(data);
+        } else {
+            // res.json({message: "Aucun hopital trouvé"});
+            res.status(404).json({
+                message:"pas de reservation"
+            }) 
+        }
+    }).catch((err)=>{
+        res.status(404).json({
+            message:err
+        })
+    })  
+   
+    .catch(err => console.log(err));
+}
+
+exports.statisNbrReser=(req, res)=> {
+    // ${req.params.nom}
+
+    database.query("select count(id) as 'nbr' from rdv")
+    .then((data)=>{
+        if (data.length > 0) {
+            res.status(200).json(data);
+        } else {
+            // res.json({message: "Aucun hopital trouvé"});
+            res.status(404).json({
+                message:"pas de reservation"
+            }) 
+        }
+    }).catch((err)=>{
+        res.status(404).json({
+            message:err
+        })
+    })  
+   
+    .catch(err => console.log(err));
+}
+
 
 function removeduplicate(regions){ 
         var cache = {};
@@ -244,5 +308,8 @@ function removeduplicateprovince(regions){
     return regions;
 
 }
+
+
+
 
 

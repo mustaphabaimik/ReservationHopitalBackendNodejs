@@ -1,6 +1,6 @@
 
 const express=require('express');
-const { signup,signin } = require('../controller/auth');
+const { signup,signin, staticNbrUser } = require('../controller/auth');
 
 const router = express.Router();
 const {database}=require("../../config/db");
@@ -26,6 +26,7 @@ const upload = multer({ storage });
 
 router.post('/signup',upload.single('photoUrl'),signup);
 router.post('/signin',signin);
+router.get('/staticNbrUser',staticNbrUser);
 
 
 

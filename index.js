@@ -41,7 +41,7 @@ connection.connect(function(err) {
 
 
 app.use(cors({
-  origin: 'http://localhost:4200',
+  origin: '*',
   methods: ['GET', 'PUT', 'DELETE', 'PATCH', 'POST']
 }));
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;

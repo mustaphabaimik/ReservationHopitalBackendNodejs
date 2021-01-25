@@ -51,6 +51,7 @@ exports.signin=(req,res)=>{
         'u.nom',
         'u.prenom',
         'u.email',
+        'u.role',
         'u.password',
         'u.photoUrl'
     ])
@@ -58,7 +59,8 @@ exports.signin=(req,res)=>{
     .get()
     .then(user => {    
         if (user) {
-            if(user.password===req.body.password){
+            console.log(user.role);
+            if(user.password===req.body.password && user.role==="patient"){
                const token =jwt.sign({id:user.id,email:user.email},process.env.JWT_SECRET,{expiresIn:'1h'});
                res.status(200).json({
                 message:"Connecté avec succès",
@@ -81,6 +83,28 @@ exports.signin=(req,res)=>{
             
         }
     }).catch(err => res.json(err));
+}
+
+exports.staticNbrUser=(req, res)=> {
+    // ${req.params.nom}
+
+    database.query("select count(id) as 'nbr' from users where role='patient'")
+    .then((data)=>{
+        if (data.length > 0) {
+            res.status(200).json(data);
+        } else {
+            // res.json({message: "Aucun hopital trouvé"});
+            res.status(404).json({
+                message:"aucune"
+            }) 
+        }
+    }).catch((err)=>{
+        res.status(404).json({
+            message:err
+        })
+    })  
+   
+    .catch(err => console.log(err));
 }
 
 

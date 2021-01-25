@@ -73,7 +73,7 @@ exports.getDocByServices=(req, res)=> {
         'h.nom as hopital',
         's.nom as service'
     ])
-    .filter({'s.nom':req.params.service })
+    .filter({'s.id':req.params.service,'m.hopital':req.params.hopital })
     .getAll()
     .then(medecins => {
        
@@ -89,7 +89,7 @@ exports.getDocByServices=(req, res)=> {
 
 exports.signUpUser=(req,res)=>{  
     
-    console.log("bzaaaaaaafff");
+    
     database.table('users as u')     
         .withFields(['u.nom',
             'u.prenom',
@@ -146,7 +146,7 @@ exports.ajouterMedecin = (req, res) => {
                 
                 if (user) {
                     
-                    database.query("INSERT INTO medecin(id,specialite,hopital,service) VALUES('"+user.id+"','"+req.body.specialite+"','"+req.body.hopital+"','"+req.body.service+"')")
+                    database.query("INSERT INTO medecin(id,specialite,hopital,service,etatpass) VALUES('"+user.id+"','"+req.body.specialite+"','"+req.body.hopital+"','"+req.body.service+"','false')")
                     .then((value)=>{
                         res.status(201).json({
                             message:"votre compte a bien été crée"       
@@ -172,7 +172,7 @@ exports.ajouterMedecin = (req, res) => {
                             from: 'mustaphabaimik@gmail.com',
                             to: user.email,
                             subject: 'mot de passe',
-                            text: user.nom+ " " + user.prenom +" voila votre nom d'utilisateur et votre mot  pour acceder à l'application Medicio. "+ " nom utilisateur:  "+user.email+ "  mot de passe:  " + user.password +"  afin de protéger votre compte Veuillez s'il vous plait modifier votre mot de passe dès la premiere connexion"
+                            text: user.nom+ " " + user.prenom +" voila votre nom d'utilisateur et votre pass pour acceder à l'application Medicio. "+ " nom utilisateur:  "+user.email+ "  mot de passe:  " + user.password +"  afin de protéger votre compte Veuillez s'il vous plait modifier votre mot de passe dès la premiere connexion"
                         };
                         
                         transporter.sendMail(mailOptions, function(error, info){
@@ -250,7 +250,7 @@ exports.getone=(req,res)=>{
           on: 'm.id = u.id'
         }
     ])
-    .withFields(["m.etatpass"])
+    .withFields(["m.etatpass","m.specialite","u.photoUrl","u.nom","u.prenom"])
     .filter({'u.email':req.params.email })
     .get()
         .then(medecin => {
@@ -258,7 +258,7 @@ exports.getone=(req,res)=>{
             if (medecin) {
                 res.status(200).json(medecin);
             } else {
-                res.json({message: "erreur"});
+                res.json({message: "erreurrrrrrrr"});
             }
     }).catch(err => res.json(err));
     
@@ -338,6 +338,143 @@ exports.changepass = (req, res) => {
 
             
 
+    
+}
+
+
+exports.getRdv = (req, res,next) => {
+
+    console.log(req.params.medecin);
+
+    database.table('rdv as r')
+    .join([
+            {
+                table: "hopitaux as h",
+                on: `h.ObjectId = r.hopital`
+            },
+            {
+                table: "services as s",
+                on: `s.id = r.service`
+            },
+            {
+                table: "medecin as m",
+                on: `m.id = r.medecin`
+            },
+            {
+                table: "users as u",
+                on: `u.id = m.id`
+            }
+        ])
+    .withFields(['r.id',
+        'r.daterdv',
+        'r.heurerdv',
+        'h.nom as hopital',
+        's.nom as service',
+        'u.nom as medecin'
+    ])
+    .filter({'m.id': req.params.medecin})
+    .getAll()
+    .then(data => {
+        if (data.length > 0) {
+            res.status(200).json(data);
+           
+        } else {
+            res.status(404).json({
+                message:"Aucun rdv trouvé"
+            }) 
+        }
+    })
+    .catch(err => console.log(err));
+
+};
+
+exports.statisSpecialite=(req, res)=> {
+    // ${req.params.nom}
+
+    database.query("select count(distinct specialite) as 'nbr' from medecin")
+    .then((data)=>{
+        if (data.length > 0) {
+            res.status(200).json(data);
+        } else {
+            // res.json({message: "Aucun hopital trouvé"});
+            res.status(404).json({
+                message:"aucune specialite"
+            }) 
+        }
+    }).catch((err)=>{
+        res.status(404).json({
+            message:err
+        })
+    })  
+   
+    .catch(err => console.log(err));
+}
+
+exports.statNbrMedecin=(req, res)=> {
+    // ${req.params.nom}
+
+    database.query("select count(id) as 'nbr' from medecin")
+    .then((data)=>{
+        if (data.length > 0) {
+            res.status(200).json(data);
+        } else {
+            // res.json({message: "Aucun hopital trouvé"});
+            res.status(404).json({
+                message:"aucun medecin"
+            }) 
+        }
+    }).catch((err)=>{
+        res.status(404).json({
+            message:err
+        })
+    })  
+   
+    .catch(err => console.log(err));
+}
+
+exports.MeilleurMedecinParSpec=(req,res)=>{
+    
+
+    database.query(`select distinct u.nom,u.prenom,u.email,u.photoUrl,m.specialite,h.nom as 'hopital',count(r.id) as 'nbr' from users u inner join medecin m on m.id=u.id inner join rdv r on r.medecin=m.id inner join hopitaux h on h.ObjectId=m.hopital where u.role='medecin' AND m.specialite='${req.params.specialite}' GROUP BY u.nom,u.prenom,u.email,m.specialite order by count(r.id) desc`)
+    .then((data)=>{
+        if (data.length > 0) {
+            res.status(200).json(data);
+        } else {
+            // res.json({message: "Aucun hopital trouvé"});
+            res.status(404).json({
+                message:"aucun medecin"
+            }) 
+        }
+    }).catch((err)=>{
+        res.status(404).json({
+            message:err
+        })
+    })  
+   
+    .catch(err => console.log(err));
+    
+}
+
+exports.getSpecialities=(req,res)=>{
+    
+
+    database.query(`select distinct m.specialite from medecin m`)
+    .then((data)=>{
+        if (data.length > 0) {
+            res.status(200).json(data);
+        } else {
+            // res.json({message: "Aucun hopital trouvé"});
+            res.status(404).json({
+                message:"aucun medecin"
+            }) 
+        }
+    }).catch((err)=>{
+        res.status(404).json({
+            message:err
+        })
+    })  
+   
+    .catch(err => console.log(err));
     
 }
 
